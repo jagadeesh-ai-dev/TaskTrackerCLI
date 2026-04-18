@@ -11,8 +11,9 @@ namespace TaskTrackerCLI.Services
     {
         void Add(string description);
         void Update(int id, string description);
-        void Delete(int id);
+        void Delete(int id, bool force = false);
         void MarkStatus(int id, string status);
         List<TaskItem> GetAll(string? filter = null);
+        List<TaskItem> Search(string keyword, string? status = null);
     }
 }
