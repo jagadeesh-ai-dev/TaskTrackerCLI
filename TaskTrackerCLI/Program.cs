@@ -8,22 +8,30 @@ using TaskTrackerCLI.Commands;
 namespace TaskTrackerCLI
 {
 
-
+    /// <summary>
+    /// Entry point of the application.
+    /// Supports both direct command execution and interactive CLI mode.
+    /// </summary>
     public class Program
     {
+        // Stores command history for ↑ ↓ navigation
         private static List<string> _history = new();
+
+        // Tracks current position in history
         private static int _historyIndex = -1;
 
         public static void Main(string[] args)
         {
             try
             {
+                // If no arguments passed → start interactive CLI
                 if (args.Length == 0)
                 {
                     RunInteractiveMode();
                     return;
                 }
 
+                // Enable Unicode support (✔ ✘ symbols)
                 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
                 var handler = new CommandHandler();
@@ -31,11 +39,15 @@ namespace TaskTrackerCLI
             }
             catch (Exception ex)
             {
+                // Global fallback for unexpected errors
                 WriteError($"Error: {ex.Message}");
             }
         }
 
-        // INTERACTIVE MODE
+        /// <summary>
+        /// Runs interactive CLI loop where user can type commands continuously.
+        /// Supports history navigation and command parsing.
+        /// </summary>
         private static void RunInteractiveMode()
         {
             var handler = new CommandHandler();
@@ -45,6 +57,7 @@ namespace TaskTrackerCLI
 
             while (true)
             {
+                // Prompt
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.Write("> ");
                 Console.ResetColor();
@@ -54,24 +67,29 @@ namespace TaskTrackerCLI
                 if (string.IsNullOrWhiteSpace(input))
                     continue;
 
+                // Save command to history
                 _history.Add(input);
                 _historyIndex = _history.Count;
 
+                // Exit command
                 if (input.Equals("exit", StringComparison.OrdinalIgnoreCase))
                     break;
 
+                // Clear screen command
                 if (input.Equals("clear", StringComparison.OrdinalIgnoreCase))
                 {
                     Console.Clear();
                     continue;
                 }
 
+                // Help menu
                 if (input.Equals("help", StringComparison.OrdinalIgnoreCase))
                 {
                     ShowHelp();
                     continue;
                 }
 
+                // Parse command (supports quoted input)
                 var args = ParseArguments(input);
 
                 try
@@ -85,7 +103,10 @@ namespace TaskTrackerCLI
             }
         }
 
-        // COMMAND HISTORY (↑ ↓ SUPPORT)
+        /// <summary>
+        /// Reads user input with command history support (↑ ↓ navigation).
+        /// Mimics basic shell behavior.
+        /// </summary>
         private static string ReadLineWithHistory()
         {
             var input = "";
@@ -101,6 +122,7 @@ namespace TaskTrackerCLI
                     return input;
                 }
 
+                // Handle backspace (remove last character)
                 else if (key.Key == ConsoleKey.Backspace && input.Length > 0)
                 {
                     input = input[..^1];
@@ -109,6 +131,7 @@ namespace TaskTrackerCLI
                     Console.Write("\b \b");
                 }
 
+                // Navigate up in history
                 else if (key.Key == ConsoleKey.UpArrow)
                 {
                     if (_history.Count == 0) continue;
@@ -117,6 +140,7 @@ namespace TaskTrackerCLI
                     ReplaceLine(_history[_historyIndex], ref input);
                 }
 
+                // Navigate down in history
                 else if (key.Key == ConsoleKey.DownArrow)
                 {
                     if (_history.Count == 0) continue;
@@ -127,6 +151,7 @@ namespace TaskTrackerCLI
                     ReplaceLine(newValue, ref input);
                 }
 
+                // Regular character input
                 else if (!char.IsControl(key.KeyChar))
                 {
                     input += key.KeyChar;
@@ -136,9 +161,11 @@ namespace TaskTrackerCLI
             }
         }
 
+        /// <summary>
+        /// Replaces current console input line (used for history navigation).
+        /// </summary>
         private static void ReplaceLine(string newValue, ref string input)
         {
-            // Clear current line
             Console.Write("\r> ");
             Console.Write(new string(' ', Console.WindowWidth - 2));
             Console.Write("\r> ");
@@ -147,7 +174,10 @@ namespace TaskTrackerCLI
             Console.Write(input);
         }
 
-        // ARGUMENT PARSER (Handles quotes)
+        // <summary>
+        /// Parses command string into arguments.
+        /// Supports quoted strings (e.g., "buy groceries").
+        /// </summary>
         private static string[] ParseArguments(string input)
         {
             var result = new List<string>();
@@ -182,7 +212,9 @@ namespace TaskTrackerCLI
             return result.ToArray();
         }
 
-        // HELP MENU
+        /// <summary>
+        /// Displays available commands and usage examples.
+        /// </summary>
         private static void ShowHelp()
         {
             Console.ForegroundColor = ConsoleColor.Green;
@@ -255,7 +287,9 @@ namespace TaskTrackerCLI
             Console.WriteLine("  list done\n");
         }
 
-        // COLORED OUTPUT HELPERS
+        /// <summary>
+        /// Writes informational message.
+        /// </summary>
         private static void WriteInfo(string message)
         {
             Console.ForegroundColor = ConsoleColor.Green;
@@ -263,6 +297,9 @@ namespace TaskTrackerCLI
             Console.ResetColor();
         }
 
+        /// <summary>
+        /// Writes error message.
+        /// </summary>
         private static void WriteError(string message)
         {
             Console.ForegroundColor = ConsoleColor.Red;
