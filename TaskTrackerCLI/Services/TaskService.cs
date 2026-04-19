@@ -43,7 +43,7 @@ namespace TaskTrackerCLI.Services
                 Description = description,
                 Status = "todo",
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = null
             });
 
             _fileService.WriteTasks(tasks);
@@ -64,11 +64,19 @@ namespace TaskTrackerCLI.Services
 
             description = Normalize(description);
 
+            if (task.Description.Equals(description))
+            {
+                WriteInfo("No changes detected. Task already has this description.");
+                Console.WriteLine();
+                return;
+            }
+
             if (IsDuplicate(tasks, description, id))
             {
                 WriteError("Another task with same description exists.\n");
                 return;
             }
+
             var taskName = task.Description;
             task.Description = description;
             task.UpdatedAt = DateTime.UtcNow;
@@ -148,7 +156,17 @@ namespace TaskTrackerCLI.Services
                 "todo" or "t" => tasks.Where(t => t.Status == "todo").ToList(),
                 "done" or "completed" or "d" => tasks.Where(t => t.Status == "done").ToList(),
                 "in-progress" or "inprogress" or "progress" or "p" or "ip" => tasks.Where(t => t.Status == "in-progress").ToList(),
+
+                // 🔹 Sorting (CreatedAt)
+                "newest" => tasks.OrderByDescending(t => t.CreatedAt).ToList(),
+                "oldest" => tasks.OrderBy(t => t.CreatedAt).ToList(),
+
+                // 🔹 Sorting (UpdatedAt)
+                "recent" => tasks.OrderByDescending(t => t.UpdatedAt).ToList(),
+                "stale" => tasks.OrderBy(t => t.UpdatedAt).ToList(),
                 _ => tasks
+
+
             };
         }
 
@@ -170,6 +188,12 @@ namespace TaskTrackerCLI.Services
             }
 
             return result.ToList();
+        }
+
+        public TaskItem? GetById(int id)
+        {
+            var tasks = _fileService.ReadTasks();
+            return tasks.FirstOrDefault(t => t.Id == id);
         }
 
         private static string Normalize(string input)

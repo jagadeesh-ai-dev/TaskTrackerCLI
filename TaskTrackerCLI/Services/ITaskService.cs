@@ -15,5 +15,6 @@ namespace TaskTrackerCLI.Services
         void MarkStatus(int id, string status);
         List<TaskItem> GetAll(string? filter = null);
         List<TaskItem> Search(string keyword, string? status = null);
+        TaskItem? GetById(int id);
     }
 }

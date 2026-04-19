@@ -61,7 +61,7 @@ namespace TaskTrackerCLI.Commands
                     case "search":
                         if (args.Length < 2)
                         {
-                            WriteError("Please provide a search keyword.");
+                            WriteError("Please provide a search keyword.\n");
                             return;
                         }
 
@@ -72,21 +72,39 @@ namespace TaskTrackerCLI.Commands
 
                         if (!results.Any())
                         {
-                            WriteInfo("No matching tasks found.");
+                            WriteInfo("No matching tasks found.\n");
                             return;
                         }
 
                         PrintTasks(results);
                         break;
 
+                    case "view":
+                        if (args.Length < 2 || !int.TryParse(args[1], out int viewId))
+                        {
+                            WriteError("Please provide a valid task ID.");
+                            return;
+                        }
+
+                        var task = _taskService.GetById(viewId);
+
+                        if (task == null)
+                        {
+                            WriteError("Task not found.");
+                            return;
+                        }
+
+                        PrintTaskDetails(task);
+                        break;
+
                     default:
-                        Console.WriteLine("Invalid command");
+                        WriteError("Invalid command");
                         break;
                 }
             }
             catch 
             {
-                Console.WriteLine("Invalid input. Please check arguments");
+                WriteError("Invalid input. Please check arguments");
             }
         }
 
@@ -94,32 +112,50 @@ namespace TaskTrackerCLI.Commands
         {
             if (tasks.Count == 0)
             {
-                Console.WriteLine("No tasks found.");
+                WriteInfo("No tasks found.\n");
                 return;
             }
 
             const int idWidth = 5;
             const int descWidth = 30;
             const int statusWidth = 15;
-            const int dateWidth = 18;
+            const int createdDateWidth = 22;  
+            const int updatedDateWidth = 22;  
 
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine();
             Console.WriteLine(
-                $"{"ID",-idWidth}| {"Description",-descWidth}| {"Status",-statusWidth}| {"Updated",-dateWidth}");
-            Console.WriteLine(new string('-', idWidth + descWidth + statusWidth + dateWidth + 10));
+                $"{"ID",-idWidth} | {"Description",-descWidth} | {"Status",-statusWidth} | {"Created",-createdDateWidth} | {"Updated",-updatedDateWidth}");
+            int totalWidth =
+                idWidth + descWidth + statusWidth + createdDateWidth + updatedDateWidth
+                + (5 * 3); // 5 columns -> 4 separators " | "
+
+            Console.WriteLine(new string('-', totalWidth));
             Console.ResetColor();
 
             foreach (var t in tasks)
             {
-                Console.Write($"{t.Id,-idWidth}| ");
-                Console.Write($"{FormatText(t.Description, descWidth)}| ");
+                Console.Write($"{t.Id,-idWidth} | ");
+                Console.Write($"{FormatText(t.Description, descWidth)} | ");
 
                 WriteStatus(t.Status, statusWidth);
-                Console.Write("| ");
+
+                Console.Write(" | ");
 
                 Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.WriteLine($"{t.UpdatedAt:dd-MM-yyyy HH:mm}".PadRight(dateWidth));
+
+                Console.Write($"{t.CreatedAt.ToLocalTime():dd-MM-yyyy hh:mm tt}".PadRight(createdDateWidth));
+                Console.ResetColor();
+                Console.Write(" | ");
+
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.WriteLine(
+                    (t.UpdatedAt.HasValue
+                        ? t.UpdatedAt.Value.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")
+                        : "—"
+                    ).PadRight(updatedDateWidth)
+                );
+
                 Console.ResetColor();
             }
 
@@ -131,39 +167,67 @@ namespace TaskTrackerCLI.Commands
             Console.WriteLine();
         }
 
+        private void PrintTaskDetails(TaskItem t)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("\nTASK DETAILS\n");
+            Console.ResetColor();
+
+            Console.WriteLine($"ID          : {t.Id}");
+            Console.WriteLine($"Description : {t.Description}");
+
+            Console.Write("Status      : ");
+            WriteStatusInline(t.Status);
+            Console.WriteLine();
+
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine($"Created     : {t.CreatedAt.ToLocalTime():dd-MM-yyyy hh:mm tt}");
+            Console.WriteLine($"Updated     : {(t.UpdatedAt.HasValue
+                ? t.UpdatedAt.Value.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")
+                : "Not updated yet")}");
+            Console.ResetColor();
+
+            Console.WriteLine();
+        }
+
+        private ConsoleColor GetStatusColor(string status)
+        {
+            return status switch
+            {
+                "done" => ConsoleColor.Green,
+                "in-progress" => ConsoleColor.Yellow,
+                _ => ConsoleColor.Gray
+            };
+        }
+
         private void WriteStatus(string status, int width)
         {
-            switch (status)
-            {
-                case "done":
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    break;
+            Console.ForegroundColor = GetStatusColor(status);
+            Console.Write(status.PadRight(width));
+            Console.ResetColor();
+        }
 
-                case "in-progress":
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    break;
-
-                default:
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                    break;
-            }
-
-            Console.Write($"{status.PadRight(width)}");
+        private void WriteStatusInline(string status)
+        {
+            Console.ForegroundColor = GetStatusColor(status);
+            Console.Write(status);
             Console.ResetColor();
         }
 
         private string FormatText(string text, int width)
         {
-            if (text.Length > width)
-                return text.Substring(0, width - 3) + "...";
+            if (string.IsNullOrWhiteSpace(text))
+                return "".PadRight(width);
 
-            return text.PadRight(width);
+            return text.Length > width
+                ? text.Substring(0, width - 3) + "..."
+                : text.PadRight(width);
         }
 
         private static void WriteError(string message)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"✘ {message}");
+            Console.WriteLine($"[ERR] {message}");
             Console.ResetColor();
             Console.WriteLine();
         }
@@ -171,7 +235,7 @@ namespace TaskTrackerCLI.Commands
         private void WriteInfo(string message)
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine($"ℹ {message}");
+            Console.WriteLine($"[INF] {message}");
             Console.ResetColor();
         }
 

@@ -216,7 +216,11 @@ namespace TaskTrackerCLI
             Console.WriteLine("  list                     -> show all tasks");
             Console.WriteLine("  list done                -> show completed tasks");
             Console.WriteLine("  list todo                -> show pending tasks");
-            Console.WriteLine("  list in-progress         -> show active tasks\n");
+            Console.WriteLine("  list in-progress         -> show active tasks");
+            Console.WriteLine("  list newest              -> sort by latest created");
+            Console.WriteLine("  list oldest              -> sort by earliest created");
+            Console.WriteLine("  list recent              -> sort by last updated");
+            Console.WriteLine("  list stale               -> sort by least recently updated\n");
 
             // 🔹 Searching
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -234,6 +238,11 @@ namespace TaskTrackerCLI
             Console.WriteLine("  clear   -> clear screen");
             Console.WriteLine("  exit    -> close app\n");
 
+            // 🔹 View
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("View");
+            Console.WriteLine("  view <id>                -> show full task details");
+
             // 🔹 Example
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("EXAMPLES");
@@ -241,6 +250,8 @@ namespace TaskTrackerCLI
             Console.WriteLine("  add \"Buy groceries\"");
             Console.WriteLine("  update 1 \"Buy milk\"");
             Console.WriteLine("  mark-done 1");
+            Console.WriteLine("  view 1");
+            Console.WriteLine("  list newest");
             Console.WriteLine("  list done\n");
         }
 
