@@ -232,7 +232,8 @@ namespace TaskTrackerCLI
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("DELETE");
             Console.ResetColor();
-            Console.WriteLine("  delete <id>                  -> delete a task by ID\n");
+            Console.WriteLine("  delete <id> --force                 -> delete a task by ID (Confirmation not required)\n");
+            Console.WriteLine("  delete <id>                         -> delete a task by ID (Confirmation required\n");
 
             // 🔹 Status
             Console.ForegroundColor = ConsoleColor.Yellow;

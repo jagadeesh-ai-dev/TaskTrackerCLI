@@ -197,7 +197,7 @@ namespace TaskTrackerCLI.Commands
         private void PrintTaskDetails(TaskItem t)
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("\n📄 TASK DETAILS\n");
+            Console.WriteLine("\nTASK DETAILS\n");
             Console.ResetColor();
 
             Console.WriteLine($"ID          : {t.Id}");
